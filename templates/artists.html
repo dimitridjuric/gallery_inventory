@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block title%}{{gallery.name}} Artists{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+    
+{% block search %}{% endblock %}
+    
+{% block content %}
+        <h1> {{gallery.name}} Artists </h1>
+        
+        {% for artist in artists %}
+            
+            <div>
+                <div class='item_title'>
+                    {{artist[0]}}
+                </div>
+                <div>
+                    <a href={{url_for('artistInventory', gallery_id = gallery.id, artist_name = artist[0])}}>works</a>
+                </div>
+            </div>
+            <br>
+        {% endfor %}
+{% endblock %}
+
+{% block foot %}
+        <a href={{url_for('galleryInventory', gallery_id = gallery.id)}}>{{gallery.name}} inventory</a>
+        <br>
+        <a href={{url_for('galleryList', gallery_id = gallery.id)}}>List of galleries</a>
+{% endblock %}

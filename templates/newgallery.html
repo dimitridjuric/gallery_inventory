@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block title%}New Gallery{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+        <h2> New Gallery </h2>
+        
+        <form action="{{url_for('newGallery')}}" method = 'POST'>
+        
+        <p>Name:<input type='text' size='80' name='name'></p>
+        <p>Address:<input type='text' size='80' name='address'></p>
+        <p>Opening hours:<input type='text' size='80' name='times'></p>
+        <p>Website:<input type='text' size='80' name='url'></p>
+        <input type='submit' value='Create'>
+        
+        </form>
+{% endblock %}

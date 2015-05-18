@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% block title%}Artist Works{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+    <h2> {{artist}} list of works </h2>
+
+        {% for i in artworks %}
+            
+            <div class='item'>
+                <div class='item_title'>{{i.title}}</div>
+                <div>{{i.date}}</div>
+                <div>{{i.medium}}</div>
+                <div>{{i.name}}</div>
+                <div>{{i.ondisplay}}</div>
+                
+            </div>
+            
+        {% endfor %}
+        
+{% endblock %}

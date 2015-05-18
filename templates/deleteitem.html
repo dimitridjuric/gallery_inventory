@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+{% block title%}Delete Artwork{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+        <h2> Are you sure you want to delete {{item.title}}? </h2>
+        <form action="{{ url_for('deleteInventoryItem',item_id = item.id, gallery_id = gallery_id)}}" method = 'post'>
+        <input type='submit', value = 'Confirm Delete'>
+        </form>
+        <a href = "{{ url_for('galleryInventory', gallery_id = gallery_id)}}"> Cancel </a>
+{% endblock %}

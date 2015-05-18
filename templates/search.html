@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% block title%}Search Results{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+        <h2> Search Results </h2>
+        
+        
+        {% for i,g in results %}
+            
+            <div>
+                <div>{{i.title}}</div>
+                <div>{{i.artist}}</div>
+                <div>{{g.name}}</div>
+                <div>{{i.ondisplay}}</div>
+            </div><br>
+            
+        {% endfor %}
+{% endblock %}
+
+{% block foot %}
+        <a href={{url_for('galleryList')}}>List of galleries</a>
+{% endblock %}

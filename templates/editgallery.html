@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block title%}Gallery Inventory{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+        <h2> Edit {{gallery.name}}</h2>
+        
+        <form action="{{url_for('editGallery', gallery_id = gallery.id)}}" method = 'POST'>
+        
+        <p>Name:<input type='text' size='80' name='name' placeholder='{{gallery.name}}'></p>
+        <p>Address:<input type='text' size='80' name='address' placeholder='{{gallery.address}}'></p>
+        <p>Opening hours:<input type='text' size='80' name='times' placeholder='{{gallery.times}}'></p>
+        <p>Website:<input type='text' size='80' name='url' placeholder='{{gallery.url}}'></p>
+        <input type='submit' value='Update'>
+        
+        </form>
+{% endblock %}

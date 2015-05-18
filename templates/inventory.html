@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block title%}Gallery Inventory{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+    <h2> {{gallery.name}} Inventory of Works </h2>
+        
+        {% for i in items %}
+            
+            <div class='item'>
+                <div class='item_title'>{{i.title}}</div>
+                <div>{{i.artist}}</div>
+                <div>{{i.date}}</div>
+                <div>{{i.ondisplay}}</div>
+                <a href={{url_for('editInventoryItem', gallery_id = i.gallery_id, item_id = i.id)}}>Edit</a>
+                <a href={{url_for('deleteInventoryItem', gallery_id = i.gallery_id, item_id = i.id)}}>Delete</a>
+            </div>
+            
+        {% endfor %}
+        
+{% endblock %}
+
+{% block foot %}
+    <a href={{url_for('newInventoryItem', gallery_id = gallery.id)}}> Add a new artwork </a>
+    <a href={{url_for('galleryList')}}> List of galleries </a>
+{% endblock %}

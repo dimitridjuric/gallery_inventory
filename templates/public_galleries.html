@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block title%}Main{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+    
+{% block content %}
+    <h2> Galleries </h2>
+    
+    {% for i in galleries %}
+        
+        <div class='item'>
+            <div class='item_title'>{{i.name}}</div>
+            <div>{{i.address}}</div>
+            <div>{{i.times}}</div>
+            <div>
+                <a href={{url_for('galleryArtists', gallery_id = i.id)}}>Artists</a>
+                <a href={{url_for('galleryInventory', gallery_id = i.id)}}>Inventory</a>
+            </div>
+            
+            <div><a href='{{i.url}}'>Website</a></div>
+        </div>
+        
+    {% endfor %}
+        
+{% endblock %}
+
+{% block foot %}
+    <a href={{url_for('newGallery')}}>Add a new gallery</a>
+{% endblock %}

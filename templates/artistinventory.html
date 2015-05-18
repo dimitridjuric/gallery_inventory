@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+{% block title%} {{gallery.name}} {{artist}} Inventory {% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+    
+{% block search %}{% endblock %}
+    
+{% block user %}
+    <a href={{url_for('gdisconnect')}}>Logout</a>
+{% endblock %}    
+    
+{% block content %}
+        <h2> {{gallery.name}} {{artist}} Inventory </h2>
+        
+        {% for i in items %}
+            
+            <div>
+                <div class='item_title'>{{i.title}}</div>
+                <div>{{i.date}}</div>
+                <div>{{i.ondisplay}}</div>
+                <a href={{url_for('editInventoryItem', gallery_id = i.gallery_id, item_id = i.id)}}>Edit</a>
+                <a href={{url_for('deleteInventoryItem', gallery_id = i.gallery_id, item_id = i.id)}}>Delete</a>
+            </div><br>
+            
+        {% endfor %}
+{% endblock %}
+
+{% block foot %}
+        <a href={{url_for('galleryInventory', gallery_id = gallery.id)}}>{{gallery.name}} inventory</a>
+        <br>
+        <a href={{url_for('galleryList', gallery_id = gallery.id)}}>List of galleries</a>
+{% endblock %}
