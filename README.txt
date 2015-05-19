@@ -5,20 +5,20 @@ Unlogged users can view a list of galleries, the inventory of each gallery, a li
 Logged users can add new galleries, in doing so they become the galleries administrator. Administrators can edit gallery details, add, edit and delete artworks to/from the inventory. They are not allowed to add, edit or delete artworks from galleries they don't administer.
 
 Setup
-1- To be able to run this project you must have a client id and a client secret for facebook and google authentication. Fill in the missing fields in the files client_secrets (google) and fb_client_secrets (facebook) 
 
-2- In Postgres create a database called gallerydbwithusers:
+1- In Postgres create a database called gallerydbwithusers:
 	CREATE DATABASE gallerydbwithusers;
 
-3- In the console, run gallerydatabase_setup.py:
+2- In the console, run gallerydatabase_setup.py:
 	python gallerydatabase_setup.py
 
-4- Still in the console, import the example database gallerydb.sql 
+3- Still in the console, import the example database gallerydb.sql 
 	psql -d gallerydbwithusers -f gallerydb.sql
 the file gallerydb.sql was generated with pg_dump 
 
 
-5- run final_project.py
+4- run final_project.py
+
 	python final_project.py
 
 Now the app is serving on http://localhost:5000/
@@ -29,5 +29,12 @@ Once logged in, a user can add a new gallery to administer, and artworks for thi
 
 In the /galleries page, only galleries for the user logged in have links to edit or delete.
 
+
+API 
+
+The data can be accessed via the app's API.
+/galleries/JSON returns a json file of the galleries table
+/gallery/xx/inventory/JSON returns the inventory of gallery xx
+/gallery/xx/inventory/yy/JSON returns the data on artwork yy of gallery xx
 
 
