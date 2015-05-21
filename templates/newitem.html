@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% block title%}New Artwork{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block search %}{% endblock %}
+
+{% block content %}
+        <h2> New Artwork for {{gallery.name}}</h2>
+        
+        <form action="{{url_for('newInventoryItem', gallery_id=gallery.id )}}" method = 'POST'>
+        <p>Title:<input type='text' size='80' name='title'></p>
+        <p>Artist:<input type='text' size='80' name='artist'></p>
+        <p>Date:<input type='text' size='80' name='date'></p>
+        <p>Dimensions:<input type='text' size='80' name='dimensions'></p>
+        <p>Medium:<input type='text' size='80' name='medium'></p>
+        <p>On Display:<input type='text' size='80' name='ondisplay'></p>
+        <p>Image URL:<input type='text' size='80' name='imgurl'></p>
+        <input type='submit' value='Create'>
+        </form>
+{% endblock %}
