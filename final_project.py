@@ -21,35 +21,14 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
-# Helper functions
-
-def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session['email'],
-                   picture=login_session['picture'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
-
-
-def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
-
-
-def getUserId(email):
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except:
-        return None
-
-
-# public access urls
+# public access urls routes
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/galleries/', methods=['GET', 'POST'])
 def galleryList():
+    '''Main page. Shows a list of the galleries in the database with details.
+    The only POST request is the search box, the GET request are the links to
+    other pages'''
     if request.method == 'POST':
         search = request.form['search']
         if search:
@@ -69,6 +48,8 @@ def galleryList():
 
 @app.route('/artists/', methods=['GET', 'POST'])
 def artistList():
+    '''Artists page. Lists all the artists in the db. The only POST request is
+    the search box, the GET request are the links to other pages'''
     if request.method == 'POST':
         search = request.form['search']
         if search:
@@ -85,6 +66,8 @@ def artistList():
 
 @app.route('/artist_works/<artist_name>', methods=['GET', 'POST'])
 def artistWorks(artist_name):
+    '''List of all the works in the db for a specific artist. The only POST
+    request is the search box, the GET request are the links to other pages'''
     if request.method == 'POST':
         search = request.form['search']
         if search:
@@ -97,16 +80,17 @@ def artistWorks(artist_name):
         artworks = session.query(Inventory, Galleries).\
                 join(Galleries).filter(Inventory.artist==artist_name).\
                 values(Inventory.title, Inventory.date, Inventory.medium, Galleries.name)
-        #print [x[0] for x in artworks]
     return render_template('artist_works.html', artist=artist_name, artworks=artworks)
 
 
 @app.route('/gallery/<int:gallery_id>/')
 @app.route('/gallery/<int:gallery_id>/inventory/', methods=['GET', 'POST'])
 def galleryInventory(gallery_id):
+    '''Inventory of works for a specific gallery. Artworks are only editable if
+    user is the gallery administrator'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     items = session.query(Inventory).filter_by(gallery_id=gallery_id)
-    if 'username' not in login_session:
+    if 'username' not in login_session or gallery.user_id != login_session['user_id']:
         return render_template('public_inventory.html', gallery=gallery, items=items)
     else:
         return render_template('inventory.html', gallery=gallery, items=items)
@@ -114,6 +98,7 @@ def galleryInventory(gallery_id):
 
 @app.route('/gallery/<int:gallery_id>/artists/')
 def galleryArtists(gallery_id):
+    '''Lists all the artists of a specific gallery'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     artists = session.query(Inventory.artist).filter_by(gallery_id=gallery_id).\
         group_by(Inventory.artist).order_by(Inventory.artist).all()
@@ -122,10 +107,12 @@ def galleryArtists(gallery_id):
 
 @app.route('/gallery/<int:gallery_id>/artists/<artist_name>')
 def artistInventory(gallery_id, artist_name):
+    '''Lists all the works of a specific artist in a specific gallery.
+    Artworks are only editable if user is the gallery administrator'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     items = session.query(Inventory).filter(and_(
         Inventory.gallery_id == gallery_id, Inventory.artist == artist_name))
-    if 'username' not in login_session:
+    if 'username' not in login_session or gallery.user_id != login_session['user_id']:
         return render_template('public_artistinventory.html', items=items,
                            artist=artist_name, gallery=gallery)
     else:
@@ -133,19 +120,12 @@ def artistInventory(gallery_id, artist_name):
                            artist=artist_name, gallery=gallery)
 
 
-@app.route('/login')
-def showLogin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.
-                                  digits) for x in xrange(32))
-    login_session['state'] = state
-    return render_template('login.html', STATE=state)
-
-
-# the following urls need admin access
+# For the following urls the user need to be logged in.
 
 
 @app.route('/gallery/new/', methods=['GET', 'POST'])
 def newGallery():
+    '''Create a new gallery'''
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
@@ -164,6 +144,8 @@ def newGallery():
 
 @app.route('/gallery/<int:gallery_id>/edit/', methods=['GET', 'POST'])
 def editGallery(gallery_id):
+    '''Edit the details of an existing gallery. For this the user has to
+    be the administrator of the gallery.'''
     if 'username' not in login_session:
         return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
@@ -191,6 +173,8 @@ def editGallery(gallery_id):
 
 @app.route('/gallery/<int:gallery_id>/delete', methods=['GET', 'POST'])
 def deleteGallery(gallery_id):
+    '''Delete an existing gallery. For this the user has to be the administrator
+    of the gallery.'''
     if 'username' not in login_session:
         return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
@@ -210,6 +194,8 @@ def deleteGallery(gallery_id):
 
 @app.route('/gallery/<int:gallery_id>/inventory/new/', methods=['GET', 'POST'])
 def newInventoryItem(gallery_id):
+    '''Add an artwork to the inventory of a gallery, user has to be the
+    administrator of the gallery'''
     if 'username' not in login_session:
         return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
@@ -239,6 +225,8 @@ def newInventoryItem(gallery_id):
 @app.route('/gallery/<int:gallery_id>/inventory/<int:item_id>/edit/',
            methods=['GET', 'POST'])
 def editInventoryItem(gallery_id, item_id):
+    '''Edit an artwork to the inventory of a gallery, user has to be the
+    administrator of the gallery'''
     if 'username' not in login_session:
         return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
@@ -274,6 +262,8 @@ def editInventoryItem(gallery_id, item_id):
 @app.route('/gallery/<int:gallery_id>/inventory/<int:item_id>/delete/',
            methods=['GET', 'POST'])
 def deleteInventoryItem(gallery_id, item_id):
+    '''Edit an artwork of a gallery, user has to be the administrator of the
+    gallery'''
     if 'username' not in login_session:
         return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
@@ -292,13 +282,54 @@ def deleteInventoryItem(gallery_id, item_id):
         return render_template('deleteitem.html', item=item, gallery_id=gallery_id)
 
 
+# Helper functions for authentication
+
+
+def createUser(login_session):
+    '''Creates a new user in the database with the name, email,
+    and picture from the login_session'''
+    newUser = User(name=login_session['username'], email=login_session['email'],
+                   picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    '''gets a user info from the database'''
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserId(email):
+    '''gets a user id from the database, or returns None if the user doesn't
+    exist'''
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
+
+
+@app.route('/login')
+def showLogin():
+    '''Login page'''
+    state = ''.join(random.choice(string.ascii_uppercase + string.
+                                  digits) for x in xrange(32))
+    login_session['state'] = state
+    return render_template('login.html', STATE=state)
+
+
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    '''Oauth with Google account'''
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     code = request.data
+    
     try:
         # upgrade the authorisation code into a credential object
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
@@ -344,7 +375,7 @@ def gconnect():
         response = make_response(json.dumps('Current user is already connected.'),200)
         response.headers['Content-Type'] = 'application/json'
         return response
-        
+    
     # store the access token in the session for later use
     login_session['credentials'] = credentials
     login_session['gplus_id'] = gplus_id
@@ -366,16 +397,14 @@ def gconnect():
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
     
-    output = ''
-    output += '<h1> welcome, '
-    output += login_session['username']
-    output += '!</h1>'
+    output = 'Welcome ' + login_session['username']
     flash('you are logged in as %s' % login_session['username'])
     return output
-
+    
 
 @app.route('/gdisconnect')
 def gdisconnect():
+    '''Oauth disconnect of user connected with Google'''
     # only disconnect a connected user
     credentials = login_session.get('credentials')
     print 'credentials:', credentials
@@ -400,6 +429,7 @@ def gdisconnect():
 
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
+    '''Oauth with Facebook account'''
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -439,16 +469,14 @@ def fbconnect():
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
     
-    output = ''
-    output += '<h1> welcome, '
-    output += login_session['username']
-    output += '!</h1>'
+    output = 'welcome ' + login_session['username']
     flash('you are logged in as %s' % login_session['username'])
     return output
 
 
 @app.route('/fbdisconnect')
 def fbdisconnect():
+    '''Oauth disconnect for users of Facebook'''
     facebook_id = login_session['facebook_id']
     access_token = login_session['access_token']
     url = 'https://graph.facebook.com/%s/permissions' % facebook_id
@@ -459,6 +487,8 @@ def fbdisconnect():
 
 @app.route('/disconnect')
 def disconnect():
+    '''General disconnect, Will call the method specific to the oauth
+    provider'''
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
@@ -478,7 +508,7 @@ def disconnect():
         return redirect(url_for('galleryList'))
         
 
-# API endpoint
+# API endpoints
 
 
 @app.route('/galleries/JSON')
@@ -502,5 +532,5 @@ def itemJSON(gallery_id, artwork_id):
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=8050)
     
