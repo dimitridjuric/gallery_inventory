@@ -71,3 +71,10 @@ a:hover {
     width: 100%;
     text-align: center;
 }
+.oauth_button{
+    margin-right: 50px;
+    padding: 10px;
+}
+.note{
+    font-size: 0.7em;
+    color: #f4ae0b;

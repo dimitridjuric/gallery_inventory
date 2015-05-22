@@ -11,38 +11,22 @@ class User(Base):
 
     __tablename__ = 'user'
     
-    name = Column(
-        String(250),
-        nullable=False)
-    id = Column(
-        Integer,
-        primary_key=True)
-    email = Column(
-        String(250),
-        nullable=False)
-    picture = Column(
-        String(250))
+    name = Column(String(250), nullable=False)
+    id = Column(Integer, primary_key=True)
+    email = Column(String(250), nullable=False)
+    picture = Column(String(250))
     
     
 class Galleries(Base):
     
     __tablename__ = 'galleries'
     
-    name = Column(
-        String(80),
-        nullable=False)
-    id = Column(
-        Integer,
-        primary_key=True)
-    address = Column(
-        String(250))
-    times = Column(
-        String(250))
-    url = Column(
-        String(80))
-    user_id = Column(
-        Integer,
-        ForeignKey('user.id'))
+    name = Column(String(80), nullable=False)
+    id = Column(Integer, primary_key=True)
+    address = Column(String(250))
+    times = Column(String(250))
+    url = Column(String(80))
+    user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
     
     @property

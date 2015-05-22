@@ -3,17 +3,18 @@
 <html>
 <head>
     <title>Login</title>
+    <link rel='stylesheet' type='text/css' href='/static/style.css'>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <script src="//apis.google.com/js/platform.js?onload=start"></script>
 </head>
 
 <body>
-    
-    You need to allow 3rd party cookies in your browser option for this login to work <br>
-    
+    Login to your Gallery Inventory profile.<br>
+    <span class="note">(You need to allow 3rd party cookies in your browser options for this login to work) <br></span>
+    <br><br>
     <!--Google Login-->
     
-    <div id="signinButton">
+    <div id="signinButton" class='oauth_button'>
         <span class="g-signin"
             data-scope="openid email"
             data-clientid="191698024151-v1t6eii496g6n7g2ph0642bjdfsetmtu.apps.googleusercontent.com"
@@ -24,7 +25,7 @@
             data-approvalprompt="force">
         </span>
     </div>
-    <div id="result"></div>
+    
     
     <script>
         function signInCallback(authResult) {
@@ -92,10 +93,10 @@
                     contentType: 'application/octet-stream; charset=utf-8',
                     success: function(result) {
                         if (result) {
-                            $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...')
+                            $('#result').html('Login Successful<br>' + result + '<br>Redirecting...')
                             setTimeout(function() {
                                 window.location.href = '/galleries';
-                            }, 4000);
+                            }, 2000);
                         } else {
                             $('#result').html('Failed to make server side call. Check you config and console.');
                         }
@@ -104,10 +105,13 @@
             });
         }
     </script>
-    <div>
+    <div class='oauth_button'>
         <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
             <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
         </fb:login-button>
     </div>
+    
+    <div id="result"></div>
 </body>
+
 </html>
