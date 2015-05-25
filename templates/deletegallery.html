@@ -10,6 +10,7 @@
         <h2> Are you sure you want to delete {{gallery.name}}? </h2>
         <form action="{{ url_for('deleteGallery',gallery_id = gallery.id)}}" method = 'post'>
         <input type='submit', value = 'Confirm Delete'>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         </form>
         <a href = "{{ url_for('galleryList', gallery_id = gallery.id)}}"> Cancel </a>
 {% endblock %}

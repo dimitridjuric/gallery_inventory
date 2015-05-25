@@ -16,6 +16,6 @@
         <p>Opening hours:<input type='text' size='80' name='times'></p>
         <p>Website:<input type='text' size='80' name='url'></p>
         <input type='submit' value='Create'>
-        
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         </form>
 {% endblock %}

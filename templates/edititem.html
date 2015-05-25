@@ -19,7 +19,7 @@
         <p>On Display:<input type='text' size='80' name='ondisplay' placeholder='{{item.ondisplay}}'></p>
         <p>Image URL:<input type='text' size='80' name='imgurl' placeholder='{{item.imgurl}}'></p>
         <input type='submit' value='Update'>
-        
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         </form>
         <a href = "{{ url_for('galleryInventory', gallery_id = gallery_id)}}"> Cancel </a>
 {% endblock %}

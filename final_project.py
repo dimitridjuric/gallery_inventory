@@ -11,9 +11,11 @@ import json
 from flask import make_response
 import requests
 from functools import wraps
+from flask.ext.seasurf import SeaSurf
 
 app = Flask(__name__)
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
+crsf = SeaSurf(app)
 
 engine = create_engine('postgresql:///gallerydbwithusers')
 Base.metadata.bind = engine

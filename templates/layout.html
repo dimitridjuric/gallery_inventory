@@ -16,6 +16,7 @@
             <form method='post'>
                 <input type='text' size='35' name='search' placeholder='Search artists and artworks'>
                 <input type='submit' value='Search'>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             </form>
         {% endblock %}
         </div>

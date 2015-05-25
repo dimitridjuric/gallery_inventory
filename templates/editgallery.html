@@ -16,6 +16,6 @@
         <p>Opening hours:<input type='text' size='80' name='times' placeholder='{{gallery.times}}'></p>
         <p>Website:<input type='text' size='80' name='url' placeholder='{{gallery.url}}'></p>
         <input type='submit' value='Update'>
-        
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         </form>
 {% endblock %}
