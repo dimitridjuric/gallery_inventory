@@ -187,13 +187,20 @@ def editGallery(gallery_id):
 def deleteGallery(gallery_id):
     '''Delete an existing gallery. For this the user has to be the administrator
     of the gallery.'''
+    # get the objects from the DB
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    items = session.query(Inventory).filter_by(gallery_id=gallery_id)
+    # check if the user is authorised to delete the gallery
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to delete this gallery"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     if request.method == 'POST':
+        # first delete all the artworks of the gallery from the database
+        for item in items:
+            session.delete(item)
+        # then delete the gallery from the DB
         session.delete(gallery)
         session.commit()
         flash('Gallery deleted')
@@ -325,7 +332,8 @@ def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.
                                   digits) for x in xrange(32))
     login_session['state'] = state
-    next_url = request.args.get('next_url')
+    next_url = request.args.get('next_url') or '/galleries'
+    print 'in showLogin, next_url: ', next_url
     return render_template('login.html', STATE=state, next_url=next_url)
 
 
