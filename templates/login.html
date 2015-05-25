@@ -44,7 +44,7 @@
                         if (result) {
                             $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
                             setTimeout(function() {
-                                window.location.href = "/galleries";
+                                window.location.href = "{{next_url}}";
                             }, 4000);
           
                         } else if (authResult['error']) {
@@ -95,7 +95,7 @@
                         if (result) {
                             $('#result').html('Login Successful<br>' + result + '<br>Redirecting...')
                             setTimeout(function() {
-                                window.location.href = '/galleries';
+                                window.location.href = '{{next_url}}';
                             }, 2000);
                         } else {
                             $('#result').html('Failed to make server side call. Check you config and console.');

@@ -12,7 +12,7 @@ Administrators can edit gallery details, add, edit and delete artworks to/from t
 
 If you vagrant up this project it will create a postgres database called gallerydbwithusers.
 Then it's going to run gallerydatabase_setup.py to create the tables.
-Finally it's going to import a small example database. 
+Finally it's going to import a small example database. (This database was exported from my testing using pg_dump)
 
 Before running the app you need to add the client secrets, and app id to these files:
 client_secrets.json

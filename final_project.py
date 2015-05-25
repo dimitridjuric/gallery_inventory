@@ -10,6 +10,7 @@ import httplib2
 import json
 from flask import make_response
 import requests
+from functools import wraps
 
 app = Flask(__name__)
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
@@ -22,6 +23,7 @@ session = DBSession()
 
 
 # public access urls routes
+
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/galleries/', methods=['GET', 'POST'])
@@ -123,11 +125,21 @@ def artistInventory(gallery_id, artist_name):
 # For the following urls the user need to be logged in.
 
 
+def login_required(f):
+    '''Login required decorator. use this to decorate all the routers where the user has
+    to be logged in. If the user isn't logged in, it redirects to the login page'''
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in login_session:
+            return redirect(url_for('showLogin', next_url=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @app.route('/gallery/new/', methods=['GET', 'POST'])
+@login_required
 def newGallery():
     '''Create a new gallery'''
-    if 'username' not in login_session:
-        return redirect('/login')
     if request.method == 'POST':
         newGallery = Galleries(name=request.form['name'],
                                address=request.form['address'],
@@ -143,11 +155,10 @@ def newGallery():
 
 
 @app.route('/gallery/<int:gallery_id>/edit/', methods=['GET', 'POST'])
+@login_required
 def editGallery(gallery_id):
     '''Edit the details of an existing gallery. For this the user has to
     be the administrator of the gallery.'''
-    if 'username' not in login_session:
-        return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -172,11 +183,10 @@ def editGallery(gallery_id):
 
 
 @app.route('/gallery/<int:gallery_id>/delete', methods=['GET', 'POST'])
+@login_required
 def deleteGallery(gallery_id):
     '''Delete an existing gallery. For this the user has to be the administrator
     of the gallery.'''
-    if 'username' not in login_session:
-        return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -193,11 +203,10 @@ def deleteGallery(gallery_id):
 
 
 @app.route('/gallery/<int:gallery_id>/inventory/new/', methods=['GET', 'POST'])
+@login_required
 def newInventoryItem(gallery_id):
     '''Add an artwork to the inventory of a gallery, user has to be the
     administrator of the gallery'''
-    if 'username' not in login_session:
-        return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -224,11 +233,10 @@ def newInventoryItem(gallery_id):
 
 @app.route('/gallery/<int:gallery_id>/inventory/<int:item_id>/edit/',
            methods=['GET', 'POST'])
+@login_required
 def editInventoryItem(gallery_id, item_id):
     '''Edit an artwork to the inventory of a gallery, user has to be the
     administrator of the gallery'''
-    if 'username' not in login_session:
-        return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -261,11 +269,10 @@ def editInventoryItem(gallery_id, item_id):
 
 @app.route('/gallery/<int:gallery_id>/inventory/<int:item_id>/delete/',
            methods=['GET', 'POST'])
+@login_required
 def deleteInventoryItem(gallery_id, item_id):
     '''Edit an artwork of a gallery, user has to be the administrator of the
     gallery'''
-    if 'username' not in login_session:
-        return redirect('/login')
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -318,7 +325,8 @@ def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.
                                   digits) for x in xrange(32))
     login_session['state'] = state
-    return render_template('login.html', STATE=state)
+    next_url = request.args.get('next_url')
+    return render_template('login.html', STATE=state, next_url=next_url)
 
 
 @app.route('/gconnect', methods=['POST'])
