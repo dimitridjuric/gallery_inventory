@@ -4,7 +4,6 @@ from gallerydatabase_setup import Base, Galleries, Inventory, User
 
 engine = create_engine('postgresql:///gallerydbwithusers')
 Base.metadata.bind = engine
-
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
