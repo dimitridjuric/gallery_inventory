@@ -32,7 +32,6 @@ def galleryList():
         search = request.form['search']
         if search:
             results = search_db(search)
-            print results
             return render_template('search.html', results=results)
     else:
         # the GET request renders the page
