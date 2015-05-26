@@ -1,6 +1,6 @@
 from helpers import search_db, get_galleries, get_artists, get_artworks, get_artwork
 from helpers import create_gallery, edit_gallery, delete_gallery, new_artwork
-from helpers import edit_artwork, delete_artwork, createUser, getUserInfo, getUserId
+from helpers import edit_artwork, delete_artwork, create_user, get_user_info, get_user_info
 from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
 from flask import session as login_session
 import random, string
@@ -12,6 +12,7 @@ from flask import make_response
 import requests
 from functools import wraps
 from flask.ext.seasurf import SeaSurf
+from gallerydatabase_setup import Galleries, Inventory
 
 app = Flask(__name__)
 # Cross site forgery request protection
@@ -337,9 +338,9 @@ def gconnect():
     login_session['provider'] = 'google'
     
     # check if user exists in the db
-    user_id = getUserId(data['email'])
+    user_id = get_user_info(data['email'])
     if user_id is None:
-        user_id = createUser(login_session)
+        user_id = create_user(login_session)
     login_session['user_id'] = user_id
     
     output = 'Welcome ' + login_session['username']
@@ -410,9 +411,9 @@ def fbconnect():
     login_session['access_token'] = stored_token
     
     # check if user exists in the db
-    user_id = getUserId(data['email'])
+    user_id = get_user_info(data['email'])
     if user_id is None:
-        user_id = createUser(login_session)
+        user_id = create_user(login_session)
     login_session['user_id'] = user_id
     
     output = 'welcome ' + login_session['username']
@@ -459,20 +460,20 @@ def disconnect():
 
 @app.route('/galleries/JSON')
 def galleryListJSON():
-    galleries = session.query(Galleries)
+    galleries = get_galleries()
     return jsonify(Galleries=[i.serialize for i in galleries])
 
 
 @app.route('/gallery/<int:gallery_id>/inventory/JSON')
 def inventoryJSON(gallery_id):
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
-    items = session.query(Inventory).filter_by(gallery_id=gallery.id)
+    gallery = get_galleries(gallery_id)
+    items = get_artworks(gallery_id=gallery_id)
     return jsonify(Inventory=[i.serialize for i in items])
 
 
 @app.route('/gallery/<int:gallery_id>/inventory/<int:artwork_id>/JSON')
 def itemJSON(gallery_id, artwork_id):
-    item = session.query(Inventory).filter_by(id=artwork_id).one()
+    item = get_artwork(artwork_id)
     return jsonify(Inventory=item.serialize)
 
 if __name__ == '__main__':

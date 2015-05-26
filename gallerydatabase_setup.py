@@ -25,7 +25,7 @@ class Galleries(Base):
     id = Column(Integer, primary_key=True)
     address = Column(String(250))
     times = Column(String(250))
-    url = Column(String(80))
+    url = Column(String(250))
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
     
@@ -43,28 +43,15 @@ class Inventory(Base):
     
     __tablename__ = 'inventory'
     
-    title = Column(
-        String(80),
-        nullable=False)
-    artist = Column(
-        String(80),
-        nullable=False)
-    id = Column(
-        Integer,
-        primary_key=True)
-    date = Column(
-        String(80))
-    dimensions = Column(
-        String(80))
-    medium = Column(
-        String(80))
-    ondisplay = Column(
-        String(80))
-    imgurl = Column(
-        String(80))
-    gallery_id = Column(
-        Integer,
-        ForeignKey('galleries.id'))
+    title = Column(String(80), nullable=False)
+    artist = Column(String(80), nullable=False)
+    id = Column(Integer, primary_key=True)
+    date = Column(String(80))
+    dimensions = Column(String(80))
+    medium = Column(String(80))
+    ondisplay = Column(String(80))
+    imgurl = Column(String(250))
+    gallery_id = Column(Integer, ForeignKey('galleries.id'))
     galleries = relationship(Galleries)
     
     @property

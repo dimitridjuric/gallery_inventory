@@ -10,18 +10,20 @@ Administrators can edit gallery details, add, edit and delete artworks to/from t
 
 ### Setup
 
-If you vagrant up this project it will create a postgres database called gallerydbwithusers.
+To try this project, you need to clone the repository. Then navigate to the project folder and `vagrant up`.
+This will create a postgres database called gallerydbwithusers.
 Then it's going to run gallerydatabase_setup.py to create the tables.
 Finally it's going to import a small example database. (This database was exported from my testing using pg_dump)
 
 Before running the app you need to add the client secrets, and app id to these files:
 client_secrets.json
 fb_client_secrets.json
+templates/login.html
 
-Once this is done you can run the app with
-python final_project.py
+Once this is done you can run the app by typing `vagrant ssh` and once in the linux virtual machine, navigate to the project folder `cd /vagrant` 
+then you can run the code with `python final_project.py`
 
-Now the app is serving on http://localhost:8850/
+Now the app is serving on http://localhost:8050/
 
 
 ### Using the app

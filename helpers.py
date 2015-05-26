@@ -58,7 +58,7 @@ def get_artworks(artist_name=None, gallery_id=None):
 
 
 def get_artwork(item_id):
-    "return a specific artwork"
+    '''return a specific artwork'''
     return session.query(Inventory).filter_by(id=item_id).one()
 
 
@@ -141,7 +141,7 @@ def delete_artwork(item):
 # Helper functions for authentication
 
 
-def createUser(login_session):
+def create_user(login_session):
     '''Creates a new user in the database with the name, email,
     and picture from the login_session'''
     newUser = User(name=login_session['username'], email=login_session['email'],
@@ -152,13 +152,13 @@ def createUser(login_session):
     return user.id
 
 
-def getUserInfo(user_id):
+def get_user_info(user_id):
     '''gets a user info from the database'''
     user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
-def getUserId(email):
+def get_user_id(email):
     '''gets a user id from the database, or returns None if the user doesn't
     exist'''
     try:
