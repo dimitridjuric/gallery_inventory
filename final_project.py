@@ -1,6 +1,9 @@
-from sqlalchemy import create_engine, and_, or_
-from sqlalchemy.orm import sessionmaker
-from gallerydatabase_setup import Base, Galleries, Inventory, User
+# from sqlalchemy import create_engine, and_, or_
+# from sqlalchemy.orm import sessionmaker
+# from gallerydatabase_setup import Base, Galleries, Inventory, User
+from helpers import search_db, get_galleries, get_artists, get_artworks, get_artwork
+from helpers import create_gallery, edit_gallery, delete_gallery, new_artwork
+from helpers import edit_artwork, delete_artwork, createUser, getUserInfo, getUserId
 from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
 from flask import session as login_session
 import random, string
@@ -19,12 +22,12 @@ csrf = SeaSurf(app)
 # client secret for google authentication
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 
-# database
-engine = create_engine('postgresql:///gallerydbwithusers')
-Base.metadata.bind = engine
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+# # database
+# engine = create_engine('postgresql:///gallerydbwithusers')
+# Base.metadata.bind = engine
+# 
+# DBSession = sessionmaker(bind=engine)
+# session = DBSession()
 
 
 # public access urls routes
@@ -38,15 +41,18 @@ def galleryList():
     if request.method == 'POST':
         search = request.form['search']
         if search:
-            search = '%'+search+'%'
-            # query the db for the search term
-            results = session.query(Inventory, Galleries).filter(
-                Inventory.gallery_id == Galleries.id).filter(or_(
-                Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
+            results = search_db(search)
+            # search = '%'+search+'%'
+            # # query the db for the search term
+            # results = session.query(Inventory, Galleries).filter(
+            #     Inventory.gallery_id == Galleries.id).filter(or_(
+            #     Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
+            print results
             return render_template('search.html', results=results)
     else:
         # the GET request renders the page
-        galleries = session.query(Galleries)
+        # galleries = session.query(Galleries)
+        galleries = get_galleries()
         # check if user is logged in
         if 'user_id' in login_session:
             user_id = login_session['user_id']
@@ -62,16 +68,18 @@ def artistList():
     if request.method == 'POST':
         search = request.form['search']
         if search:
-            search = '%'+search+'%'
-            results = session.query(Inventory, Galleries).filter(
-                Inventory.gallery_id == Galleries.id).filter(or_(
-                Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
+            # search = '%'+search+'%'
+            # results = session.query(Inventory, Galleries).filter(
+            #     Inventory.gallery_id == Galleries.id).filter(or_(
+            #     Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
+            results = search_db(search)
             return render_template('search.html', results=results)
     else:
     # the GET request renders the page
         # query to get the artists in the gallery inventory
-        artists = session.query(Inventory.artist).group_by(Inventory.artist).\
-            order_by(Inventory.artist).all()
+        # artists = session.query(Inventory.artist).group_by(Inventory.artist).\
+        #     order_by(Inventory.artist).all()
+        artists = get_artists()
     return render_template('all_artists.html', artists=artists)
 
 
@@ -82,16 +90,18 @@ def artistWorks(artist_name):
     if request.method == 'POST':
         search = request.form['search']
         if search:
-            search = '%'+search+'%'
-            results = session.query(Inventory, Galleries).filter(
-                Inventory.gallery_id == Galleries.id).filter(or_(
-                Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
+            # search = '%'+search+'%'
+            # results = session.query(Inventory, Galleries).filter(
+            #     Inventory.gallery_id == Galleries.id).filter(or_(
+            #     Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
+            results = search_db(search)
             return render_template('search.html', results=results)
     else:
         # query to get the artworks of the specific artist
-        artworks = session.query(Inventory, Galleries).\
-                join(Galleries).filter(Inventory.artist==artist_name).\
-                values(Inventory.title, Inventory.date, Inventory.medium, Galleries.name)
+        # artworks = session.query(Inventory, Galleries).\
+        #         join(Galleries).filter(Inventory.artist==artist_name).\
+        #         values(Inventory.title, Inventory.date, Inventory.medium, Galleries.name)
+        artworks = get_artworks(artist_name)
     return render_template('artist_works.html', artist=artist_name, artworks=artworks)
 
 
@@ -100,8 +110,10 @@ def artistWorks(artist_name):
 def galleryInventory(gallery_id):
     '''Inventory of works for a specific gallery. Artworks are only editable if
     user is the gallery administrator'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
-    items = session.query(Inventory).filter_by(gallery_id=gallery_id)
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # items = session.query(Inventory).filter_by(gallery_id=gallery_id)
+    gallery = get_galleries(gallery_id)
+    items = get_artworks(gallery_id=gallery_id)
     if 'username' not in login_session or gallery.user_id != login_session['user_id']:
         return render_template('public_inventory.html', gallery=gallery, items=items)
     else:
@@ -111,9 +123,11 @@ def galleryInventory(gallery_id):
 @app.route('/gallery/<int:gallery_id>/artists/')
 def galleryArtists(gallery_id):
     '''Lists all the artists of a specific gallery'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
-    artists = session.query(Inventory.artist).filter_by(gallery_id=gallery_id).\
-        group_by(Inventory.artist).order_by(Inventory.artist).all()
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # artists = session.query(Inventory.artist).filter_by(gallery_id=gallery_id).\
+    #     group_by(Inventory.artist).order_by(Inventory.artist).all()
+    gallery = get_galleries(gallery_id)
+    artists = get_artists(gallery_id)
     return render_template('artists.html', gallery=gallery, artists=artists)
 
 
@@ -121,9 +135,11 @@ def galleryArtists(gallery_id):
 def artistInventory(gallery_id, artist_name):
     '''Lists all the works of a specific artist in a specific gallery.
     Artworks are only editable if user is the gallery administrator'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
-    items = session.query(Inventory).filter(and_(
-        Inventory.gallery_id == gallery_id, Inventory.artist == artist_name))
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # items = session.query(Inventory).filter(and_(
+    #     Inventory.gallery_id == gallery_id, Inventory.artist == artist_name))
+    gallery = get_galleries(gallery_id)
+    items = get_artworks(artist_name, gallery_id)
     if 'username' not in login_session or gallery.user_id != login_session['user_id']:
         return render_template('public_artistinventory.html', items=items,
                            artist=artist_name, gallery=gallery)
@@ -153,13 +169,14 @@ def newGallery():
     '''Create a new gallery'''
     # POST request is the form with the details of the new gallery
     if request.method == 'POST':
-        newGallery = Galleries(name=request.form['name'],
-                               address=request.form['address'],
-                               times=request.form['times'],
-                               url=request.form['url'],
-                               user_id=login_session['user_id'])
-        session.add(newGallery)
-        session.commit()
+        # newGallery = Galleries(name=request.form['name'],
+        #                        address=request.form['address'],
+        #                        times=request.form['times'],
+        #                        url=request.form['url'],
+        #                        user_id=login_session['user_id'])
+        # session.add(newGallery)
+        # session.commit()
+        create_gallery(request.form, login_session['user_id'])
         # flash message confirmation
         flash('New gallery created')
         return redirect(url_for('galleryList'))
@@ -173,7 +190,8 @@ def newGallery():
 def editGallery(gallery_id):
     '''Edit the details of an existing gallery. For this the user has to
     be the administrator of the gallery.'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    gallery = get_galleries(gallery_id)
     # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -182,16 +200,17 @@ def editGallery(gallery_id):
         return response
     # POST request is the form to edit the details
     if request.method == 'POST':
-        if request.form['name']:
-            gallery.name = request.form['name']
-        if request.form['address']:
-            gallery.address = request.form['address']
-        if request.form['times']:
-            gallery.times = request.form['times']
-        if request.form['url']:
-            gallery.url = request.form['url']
-        session.add(gallery)
-        session.commit()
+        # if request.form['name']:
+        #     gallery.name = request.form['name']
+        # if request.form['address']:
+        #     gallery.address = request.form['address']
+        # if request.form['times']:
+        #     gallery.times = request.form['times']
+        # if request.form['url']:
+        #     gallery.url = request.form['url']
+        # session.add(gallery)
+        # session.commit()
+        edit_gallery(request.form, gallery)
         flash('Gallery edited')
         return redirect(url_for('galleryList'))
     # GET request renders the page
@@ -205,8 +224,10 @@ def deleteGallery(gallery_id):
     '''Delete an existing gallery. For this the user has to be the administrator
     of the gallery.'''
     # get the objects from the DB
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
-    items = session.query(Inventory).filter_by(gallery_id=gallery_id)
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # items = session.query(Inventory).filter_by(gallery_id=gallery_id)
+    gallery = get_galleries(gallery_id)
+    items = get_artworks(gallery_id=gallery_id)
     # check if the user is authorised to delete the gallery
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -214,12 +235,13 @@ def deleteGallery(gallery_id):
         response.headers['Content-Type'] = 'application/json'
         return response
     if request.method == 'POST':
-        # first delete all the artworks of the gallery from the database
-        for item in items:
-            session.delete(item)
-        # then delete the gallery from the DB
-        session.delete(gallery)
-        session.commit()
+        # # first delete all the artworks of the gallery from the database
+        # for item in items:
+        #     session.delete(item)
+        # # then delete the gallery from the DB
+        # session.delete(gallery)
+        # session.commit()
+        delete_gallery(gallery, items)
         flash('Gallery deleted')
         return redirect(url_for('galleryList'))
     else:
@@ -231,7 +253,8 @@ def deleteGallery(gallery_id):
 def newInventoryItem(gallery_id):
     '''Add an artwork to the inventory of a gallery, user has to be the
     administrator of the gallery'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    gallery = get_galleries(gallery_id)
     # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
@@ -240,21 +263,22 @@ def newInventoryItem(gallery_id):
         return response
     # POST request is the form for the new artwork
     if request.method == 'POST':
-        newItem = Inventory(title=request.form['title'],
-                            artist=request.form['artist'],
-                            date=request.form['date'],
-                            dimensions=request.form['dimensions'],
-                            medium=request.form['medium'],
-                            ondisplay=request.form['ondisplay'],
-                            imgurl=request.form['imgurl'],
-                            gallery_id=gallery_id)
-        session.add(newItem)
-        session.commit()
+        # newItem = Inventory(title=request.form['title'],
+        #                     artist=request.form['artist'],
+        #                     date=request.form['date'],
+        #                     dimensions=request.form['dimensions'],
+        #                     medium=request.form['medium'],
+        #                     ondisplay=request.form['ondisplay'],
+        #                     imgurl=request.form['imgurl'],
+        #                     gallery_id=gallery_id)
+        # session.add(newItem)
+        # session.commit()
+        new_artwork(request.form, gallery_id)
         flash('New artwork added')
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
     # GET request renders the page
     else:
-        gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+        # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
         return render_template('newitem.html', gallery=gallery)
 
 
@@ -264,32 +288,35 @@ def newInventoryItem(gallery_id):
 def editInventoryItem(gallery_id, item_id):
     '''Edit an artwork to the inventory of a gallery, user has to be the
     administrator of the gallery'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    gallery = get_galleries(gallery_id)
     # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to edit items for this gallery"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
-    item = session.query(Inventory).filter_by(id=item_id).one()
+    # item = session.query(Inventory).filter_by(id=item_id).one()
+    item = get_artwork(item_id)
     # POST request is the form to edit artwork
     if request.method == 'POST':
-        if request.form['title']:
-            item.title = request.form['title']
-        if request.form['artist']:
-            item.artist = request.form['artist']
-        if request.form['date']:
-            item.date = request.form['date']
-        if request.form['dimensions']:
-            item.dimensions = request.form['dimensions']
-        if request.form['medium']:
-            item.medium = request.form['medium']
-        if request.form['ondisplay']:
-            item.ondisplay = request.form['ondisplay']
-        if request.form['imgurl']:
-            item.imgurl = request.form['imgurl']
-        session.add(item)
-        session.commit()
+        # if request.form['title']:
+        #     item.title = request.form['title']
+        # if request.form['artist']:
+        #     item.artist = request.form['artist']
+        # if request.form['date']:
+        #     item.date = request.form['date']
+        # if request.form['dimensions']:
+        #     item.dimensions = request.form['dimensions']
+        # if request.form['medium']:
+        #     item.medium = request.form['medium']
+        # if request.form['ondisplay']:
+        #     item.ondisplay = request.form['ondisplay']
+        # if request.form['imgurl']:
+        #     item.imgurl = request.form['imgurl']
+        # session.add(item)
+        # session.commit()
+        edit_artwork(request.form, item)
         flash('Item edited')
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
     # GET request renders the page
@@ -303,17 +330,19 @@ def editInventoryItem(gallery_id, item_id):
 def deleteInventoryItem(gallery_id, item_id):
     '''Edit an artwork of a gallery, user has to be the administrator of the
     gallery'''
-    gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    gallery = get_galleries(gallery_id)
     # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to delete items for this gallery"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
-    item = session.query(Inventory).filter_by(id=item_id).one()
+    # item = session.query(Inventory).filter_by(id=item_id).one()
+    item = get_artwork(item_id)
     if request.method == 'POST':
-        session.delete(item)
-        session.commit()
+        # session.delete(item)
+        # session.commit()
+        delete_artwork(item)
         flash('Item deleted')
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
     else:
@@ -323,31 +352,31 @@ def deleteInventoryItem(gallery_id, item_id):
 # Helper functions for authentication
 
 
-def createUser(login_session):
-    '''Creates a new user in the database with the name, email,
-    and picture from the login_session'''
-    newUser = User(name=login_session['username'], email=login_session['email'],
-                   picture=login_session['picture'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
-
-
-def getUserInfo(user_id):
-    '''gets a user info from the database'''
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
-
-
-def getUserId(email):
-    '''gets a user id from the database, or returns None if the user doesn't
-    exist'''
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except:
-        return None
+# def createUser(login_session):
+#     '''Creates a new user in the database with the name, email,
+#     and picture from the login_session'''
+#     newUser = User(name=login_session['username'], email=login_session['email'],
+#                    picture=login_session['picture'])
+#     session.add(newUser)
+#     session.commit()
+#     user = session.query(User).filter_by(email=login_session['email']).one()
+#     return user.id
+# 
+# 
+# def getUserInfo(user_id):
+#     '''gets a user info from the database'''
+#     user = session.query(User).filter_by(id=user_id).one()
+#     return user
+# 
+# 
+# def getUserId(email):
+#     '''gets a user id from the database, or returns None if the user doesn't
+#     exist'''
+#     try:
+#         user = session.query(User).filter_by(email=email).one()
+#         return user.id
+#     except:
+#         return None
 
 
 @app.route('/login')
@@ -361,6 +390,7 @@ def showLogin():
     return render_template('login.html', STATE=state, next_url=next_url)
 
 
+@csrf.exempt
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     '''Oauth with Google account'''
@@ -467,6 +497,7 @@ def gdisconnect():
         return response
         
 
+@csrf.exempt
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
     '''Oauth with Facebook account'''
