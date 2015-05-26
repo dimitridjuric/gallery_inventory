@@ -14,9 +14,12 @@ from functools import wraps
 from flask.ext.seasurf import SeaSurf
 
 app = Flask(__name__)
+# Cross site forgery request protection
+csrf = SeaSurf(app)
+# client secret for google authentication
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
-crsf = SeaSurf(app)
 
+# database
 engine = create_engine('postgresql:///gallerydbwithusers')
 Base.metadata.bind = engine
 
@@ -30,19 +33,21 @@ session = DBSession()
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/galleries/', methods=['GET', 'POST'])
 def galleryList():
-    '''Main page. Shows a list of the galleries in the database with details.
-    The only POST request is the search box, the GET request are the links to
-    other pages'''
+    "Main page. Shows a list of the galleries in the database with details."
+    # The only POST request is the search box
     if request.method == 'POST':
         search = request.form['search']
         if search:
             search = '%'+search+'%'
+            # query the db for the search term
             results = session.query(Inventory, Galleries).filter(
                 Inventory.gallery_id == Galleries.id).filter(or_(
                 Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
             return render_template('search.html', results=results)
     else:
+        # the GET request renders the page
         galleries = session.query(Galleries)
+        # check if user is logged in
         if 'user_id' in login_session:
             user_id = login_session['user_id']
         else:
@@ -52,8 +57,8 @@ def galleryList():
 
 @app.route('/artists/', methods=['GET', 'POST'])
 def artistList():
-    '''Artists page. Lists all the artists in the db. The only POST request is
-    the search box, the GET request are the links to other pages'''
+    "Artists page. Lists all the artists in the db."
+    # The only POST request is the search box
     if request.method == 'POST':
         search = request.form['search']
         if search:
@@ -63,6 +68,8 @@ def artistList():
                 Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
             return render_template('search.html', results=results)
     else:
+    # the GET request renders the page
+        # query to get the artists in the gallery inventory
         artists = session.query(Inventory.artist).group_by(Inventory.artist).\
             order_by(Inventory.artist).all()
     return render_template('all_artists.html', artists=artists)
@@ -70,8 +77,8 @@ def artistList():
 
 @app.route('/artist_works/<artist_name>', methods=['GET', 'POST'])
 def artistWorks(artist_name):
-    '''List of all the works in the db for a specific artist. The only POST
-    request is the search box, the GET request are the links to other pages'''
+    "List of all the works in the db for a specific artist."
+    # The only POST request is the search box
     if request.method == 'POST':
         search = request.form['search']
         if search:
@@ -81,6 +88,7 @@ def artistWorks(artist_name):
                 Inventory.artist.ilike(search), Inventory.title.ilike(search))).all()
             return render_template('search.html', results=results)
     else:
+        # query to get the artworks of the specific artist
         artworks = session.query(Inventory, Galleries).\
                 join(Galleries).filter(Inventory.artist==artist_name).\
                 values(Inventory.title, Inventory.date, Inventory.medium, Galleries.name)
@@ -128,8 +136,9 @@ def artistInventory(gallery_id, artist_name):
 
 
 def login_required(f):
-    '''Login required decorator. use this to decorate all the routers where the user has
-    to be logged in. If the user isn't logged in, it redirects to the login page'''
+    '''Login required decorator. use this to decorate all the routes where the
+    user has to be logged in. If the user isn't logged in, it redirects to the
+    login page'''
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' not in login_session:
@@ -142,6 +151,7 @@ def login_required(f):
 @login_required
 def newGallery():
     '''Create a new gallery'''
+    # POST request is the form with the details of the new gallery
     if request.method == 'POST':
         newGallery = Galleries(name=request.form['name'],
                                address=request.form['address'],
@@ -150,8 +160,10 @@ def newGallery():
                                user_id=login_session['user_id'])
         session.add(newGallery)
         session.commit()
+        # flash message confirmation
         flash('New gallery created')
         return redirect(url_for('galleryList'))
+    # GET request renders the page
     else:
         return render_template('newgallery.html')
 
@@ -162,11 +174,13 @@ def editGallery(gallery_id):
     '''Edit the details of an existing gallery. For this the user has to
     be the administrator of the gallery.'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to edit this gallery"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
+    # POST request is the form to edit the details
     if request.method == 'POST':
         if request.form['name']:
             gallery.name = request.form['name']
@@ -180,6 +194,7 @@ def editGallery(gallery_id):
         session.commit()
         flash('Gallery edited')
         return redirect(url_for('galleryList'))
+    # GET request renders the page
     else:
         return render_template('editgallery.html', gallery=gallery)
 
@@ -217,11 +232,13 @@ def newInventoryItem(gallery_id):
     '''Add an artwork to the inventory of a gallery, user has to be the
     administrator of the gallery'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to add an item to this gallery"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
+    # POST request is the form for the new artwork
     if request.method == 'POST':
         newItem = Inventory(title=request.form['title'],
                             artist=request.form['artist'],
@@ -235,6 +252,7 @@ def newInventoryItem(gallery_id):
         session.commit()
         flash('New artwork added')
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
+    # GET request renders the page
     else:
         gallery = session.query(Galleries).filter_by(id=gallery_id).one()
         return render_template('newitem.html', gallery=gallery)
@@ -247,12 +265,14 @@ def editInventoryItem(gallery_id, item_id):
     '''Edit an artwork to the inventory of a gallery, user has to be the
     administrator of the gallery'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to edit items for this gallery"), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     item = session.query(Inventory).filter_by(id=item_id).one()
+    # POST request is the form to edit artwork
     if request.method == 'POST':
         if request.form['title']:
             item.title = request.form['title']
@@ -272,6 +292,7 @@ def editInventoryItem(gallery_id, item_id):
         session.commit()
         flash('Item edited')
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
+    # GET request renders the page
     else:
         return render_template('edititem.html', gallery_id=gallery_id, item=item)
 
@@ -283,6 +304,7 @@ def deleteInventoryItem(gallery_id, item_id):
     '''Edit an artwork of a gallery, user has to be the administrator of the
     gallery'''
     gallery = session.query(Galleries).filter_by(id=gallery_id).one()
+    # check if user is authorised
     if gallery.user_id != login_session['user_id']:
         response = make_response(json.dumps(
             "You don't have permission to delete items for this gallery"), 200)
