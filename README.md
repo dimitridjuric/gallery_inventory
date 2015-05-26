@@ -26,8 +26,8 @@ Now the app is serving on http://localhost:8850/
 
 ### Using the app
 
-The main page displays a list of a few galleries.
-Once logged in, a user can add a new gallery to administer, and artworks for this gallery.
+The main page displays a list of a few galleries. each gallery has links showing a list of artists in the inventory and a list of the artworks.
+Once logged in, a user can add a new gallery to administer, and artworks for this gallery. The user can also edit and delete artworks.
 In the `/galleries` page, only galleries for the user logged in have links to edit or delete.
 
 
