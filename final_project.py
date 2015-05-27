@@ -1,6 +1,6 @@
 from helpers import search_db, get_galleries, get_artists, get_artworks, get_artwork
 from helpers import create_gallery, edit_gallery, delete_gallery, new_artwork
-from helpers import edit_artwork, delete_artwork, create_user, get_user_info, get_user_info
+from helpers import edit_artwork, delete_artwork, create_user, get_user_info, get_user_id
 from flask import Flask, render_template, url_for, request, redirect, flash, jsonify
 from flask import session as login_session
 import random, string
@@ -338,7 +338,7 @@ def gconnect():
     login_session['provider'] = 'google'
     
     # check if user exists in the db
-    user_id = get_user_info(data['email'])
+    user_id = get_user_id(data['email'])
     if user_id is None:
         user_id = create_user(login_session)
     login_session['user_id'] = user_id
@@ -411,7 +411,7 @@ def fbconnect():
     login_session['access_token'] = stored_token
     
     # check if user exists in the db
-    user_id = get_user_info(data['email'])
+    user_id = get_user_id(data['email'])
     if user_id is None:
         user_id = create_user(login_session)
     login_session['user_id'] = user_id
