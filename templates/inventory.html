@@ -16,6 +16,9 @@
                 <div>{{i.artist}}</div>
                 <div>{{i.date}}</div>
                 <div>{{i.ondisplay}}</div>
+                <div>
+                    <img class="image" src="{{i.imgurl}}" alt="">
+                </div>
                 <a href={{url_for('editInventoryItem', gallery_id = i.gallery_id, item_id = i.id)}}>Edit</a>
                 <a href={{url_for('deleteInventoryItem', gallery_id = i.gallery_id, item_id = i.id)}}>Delete</a>
             </div>

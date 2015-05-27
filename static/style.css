@@ -78,3 +78,8 @@ a:hover {
 .note{
     font-size: 0.7em;
     color: #f4ae0b;
+}
+.image{
+    width: 200px;
+    height: auto
+}

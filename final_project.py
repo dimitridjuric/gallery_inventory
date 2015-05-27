@@ -42,7 +42,8 @@ def galleryList():
             user_id = login_session['user_id']
         else:
             user_id = None
-        return render_template('galleries2.html', galleries=galleries, user_id=user_id)
+        return render_template('galleries2.html', galleries=galleries,
+                               user_id=user_id)
 
 
 @app.route('/artists/', methods=['GET', 'POST'])
@@ -73,7 +74,8 @@ def artistWorks(artist_name):
     else:
         # query to get the artworks of the specific artist
         artworks = get_artworks(artist_name)
-    return render_template('artist_works.html', artist=artist_name, artworks=artworks)
+    return render_template('artist_works.html', artist=artist_name,
+                           artworks=artworks)
 
 
 @app.route('/gallery/<int:gallery_id>/')
@@ -83,8 +85,10 @@ def galleryInventory(gallery_id):
     user is the gallery administrator'''
     gallery = get_galleries(gallery_id)
     items = get_artworks(gallery_id=gallery_id)
-    if 'username' not in login_session or gallery.user_id != login_session['user_id']:
-        return render_template('public_inventory.html', gallery=gallery, items=items)
+    if 'username' not in login_session or gallery.user_id != login_session[
+            'user_id']:
+        return render_template('public_inventory.html', gallery=gallery,
+                               items=items)
     else:
         return render_template('inventory.html', gallery=gallery, items=items)
 
@@ -103,12 +107,13 @@ def artistInventory(gallery_id, artist_name):
     Artworks are only editable if user is the gallery administrator'''
     gallery = get_galleries(gallery_id)
     items = get_artworks(artist_name, gallery_id)
-    if 'username' not in login_session or gallery.user_id != login_session['user_id']:
+    if 'username' not in login_session or gallery.user_id != login_session[
+            'user_id']:
         return render_template('public_artistinventory.html', items=items,
-                           artist=artist_name, gallery=gallery)
+                               artist=artist_name, gallery=gallery)
     else:
         return render_template('artistinventory.html', items=items,
-                           artist=artist_name, gallery=gallery)
+                               artist=artist_name, gallery=gallery)
 
 
 # For the following urls the user need to be logged in.
@@ -179,7 +184,8 @@ def deleteGallery(gallery_id):
         response.headers['Content-Type'] = 'application/json'
         return response
     if request.method == 'POST':
-        # delete the items in the gallery inventory, then the gallery from the db
+        # delete the items in the gallery inventory, then the gallery from
+        # the db
         delete_gallery(gallery, items)
         flash('Gallery deleted')
         return redirect(url_for('galleryList'))
@@ -230,7 +236,8 @@ def editInventoryItem(gallery_id, item_id):
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
     # GET request renders the page
     else:
-        return render_template('edititem.html', gallery_id=gallery_id, item=item)
+        return render_template('edititem.html', gallery_id=gallery_id,
+                               item=item)
 
 
 @app.route('/gallery/<int:gallery_id>/inventory/<int:item_id>/delete/',
@@ -252,7 +259,8 @@ def deleteInventoryItem(gallery_id, item_id):
         flash('Item deleted')
         return redirect(url_for('galleryInventory', gallery_id=gallery_id))
     else:
-        return render_template('deleteitem.html', item=item, gallery_id=gallery_id)
+        return render_template('deleteitem.html', item=item,
+                               gallery_id=gallery_id)
 
 
 @app.route('/login')
@@ -282,7 +290,8 @@ def gconnect():
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(json.dumps('Failed to upgrade the auth code.'), 401)
+        response = make_response(json.dumps('Failed to upgrade the auth code.'),
+                                 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     
@@ -318,7 +327,8 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),200)
+        response = make_response(json.dumps(
+            'Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     
@@ -368,7 +378,8 @@ def gdisconnect():
     
     if result['status'] != '200':
         # if for whatever reason the token was invalid
-        response = make_response(json.dumps('Failed to revoke token for given user'), 400)
+        response = make_response(json.dumps(
+            'Failed to revoke token for given user'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
         
@@ -386,9 +397,12 @@ def fbconnect():
     # Exchange client token for long-lived server side token with GET /oauth/
     # acces_token?grant_type=fb_exchange_token&client_id={app-id}
     # &client_secret={app-secret}&fb_exchange_token={short-lived-token}
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_id']
-    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id, app_secret, access_token)
+    app_id = json.loads(open('fb_client_secrets.json', 'r').read())['web'][
+        'app_id']
+    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web'][
+        'app_secret']
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
+            app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     
@@ -406,7 +420,8 @@ def fbconnect():
     login_session['email'] = data['email']
     login_session['facebook_id'] = data['id']
     
-    # The token must be stored in the login_session in order to properly logout, let's strip out the information before the equals sign in our token
+    # The token must be stored in the login_session in order to properly logout,
+    # let's strip out the information before the equals sign in our token
     stored_token = token.split("=")[1]
     login_session['access_token'] = stored_token
     

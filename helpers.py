@@ -13,8 +13,8 @@ def search_db(term):
     either the artist name or the artwork title'''
     term = '%'+term+'%'
     results = session.query(Inventory, Galleries).filter(
-                Inventory.gallery_id == Galleries.id).filter(or_(
-                Inventory.artist.ilike(term), Inventory.title.ilike(term))).all()
+        Inventory.gallery_id == Galleries.id).filter(or_(
+            Inventory.artist.ilike(term), Inventory.title.ilike(term))).all()
     return results
 
 
@@ -31,11 +31,12 @@ def get_artists(gallery_id=None):
     '''return a list of all the artist names in the db, or if there's a gallery_id
     returns all the artists having works in the gallery'''
     if gallery_id is None:
-        return session.query(Inventory.artist).group_by(Inventory.artist).\
-            order_by(Inventory.artist).all()
+        return session.query(Inventory.artist).group_by(
+            Inventory.artist).order_by(Inventory.artist).all()
     else:
-        return session.query(Inventory.artist).filter_by(gallery_id=gallery_id).\
-            group_by(Inventory.artist).order_by(Inventory.artist).all()
+        return session.query(Inventory.artist).filter_by(
+            gallery_id=gallery_id).group_by(Inventory.artist).order_by(
+            Inventory.artist).all()
 
 
 def get_artworks(artist_name=None, gallery_id=None):
@@ -46,14 +47,15 @@ def get_artworks(artist_name=None, gallery_id=None):
     if there no artist the function return all the artworks in the gallery
     inventory'''
     if gallery_id is None:
-        artworks = session.query(Inventory, Galleries).\
-                join(Galleries).filter(Inventory.artist==artist_name).\
-                values(Inventory.title, Inventory.date, Inventory.medium, Galleries.name)
+        artworks = session.query(Inventory, Galleries).join(Galleries).filter(
+            Inventory.artist == artist_name).values(
+                Inventory.title, Inventory.date, Inventory.medium,
+                Galleries.name,  Inventory.imgurl)
     elif artist_name is None:
         artworks = session.query(Inventory).filter_by(gallery_id=gallery_id)
     else:
-        artworks = session.query(Inventory).filter(and_(Inventory.gallery_id\
-                    == gallery_id, Inventory.artist == artist_name))
+        artworks = session.query(Inventory).filter(and_(
+            Inventory.gallery_id == gallery_id, Inventory.artist == artist_name))
     return artworks
 
 
